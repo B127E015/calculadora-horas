@@ -15,16 +15,21 @@ jobs:
       - name: Baixar codigo
         uses: actions/checkout@v4
 
+      - name: Preparar cache
+        run: mkdir -p "$HOME/.buildozer"
+        
       - name: Compilar aplicativo
-        uses: ArtemSBulgakov/buildozer-action@v1
-        id: buildozer
-        with:
-          workdir: .
-          buildozer_version: stable
-
+        run: |
+          docker pull ghcr.io/kivy/buildozer:latest
+          docker run --rm \
+            -w /home/user/hostcwd \
+            -v "$HOME/.buildozer":/home/user/.buildozer \
+            -v "$GITHUB_WORKSPACE":/home/user/hostcwd \
+            ghcr.io/kivy/buildozer:latest android debug
+            
       - name: Disponibilizar APK
         uses: actions/upload-artifact@v4
         with:
           name: calculadora-horas-apk
-          path: ${{ steps.buildozer.outputs.filename }}
-          
+          path: bin/*.apk
+          if-no-files-found: error
